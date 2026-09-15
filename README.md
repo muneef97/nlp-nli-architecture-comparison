@@ -30,11 +30,17 @@ Three JSON splits, binary-labelled (`entails` / `neutral`):
 
 ## 🏗️ Models
 
-**Model 1 — Siamese BiLSTM:** a shared BiLSTM encodes the premise and hypothesis independently; sentence vectors are combined as `[p, h, |p-h|, p*h]` and passed to an MLP classifier. Ablated over pooling (max / mean+max) and self-attention type (none / additive / dot-product / multi-head).
+**Model 1 — Siamese BiLSTM:** a shared BiLSTM encodes the premise and hypothesis independently; sentence vectors are max-pooled and combined as `[u, v, |u-v|, u⊙v]` and passed to an MLP classifier. Ablated over pooling (max / mean+max) and self-attention type (none / additive / dot-product / multi-head).
 
-**Model 2 — ESIM-lite:** a shared BiGRU encodes both sentences, followed by cross-attention that aligns each premise token to the hypothesis and vice versa, an optional composition GRU over the aligned representations, then pooled and classified. Ablated over the attention scoring function (dot / bilinear / additive) and the composition mechanism.
+<img src="screenshots/model1-bilstm-architecture.png" alt="Model 1 architecture: Siamese BiLSTM" width="480">
 
-**Model 3 — Transformer cross-encoder:** premise and hypothesis are concatenated as a single sequence (`[premise] [SEP] [hypothesis]`), embedded with trainable token + positional (+ optional token-type) embeddings, encoded by a Transformer encoder stack built from scratch (no pretrained weights), then masked-pooled and classified.
+**Model 2 — ESIM-lite:** a shared BiGRU encodes both sentences (tied weights), followed by cross-attention (dot / bilinear / additive) that aligns each premise token to the hypothesis and vice versa, an enhancement + projection step, an optional composition BiGRU over the aligned representations, then pooled (mean/max) and classified.
+
+<img src="screenshots/model2-esim-lite-architecture.png" alt="Model 2 architecture: ESIM-lite" width="480">
+
+**Model 3 — Transformer cross-encoder:** premise and hypothesis are concatenated as a single sequence (`[premise] [SEP] [hypothesis]`), embedded with trainable token embeddings (E=100) + sinusoidal positional encodings, encoded by a 2-layer, 4-head Transformer encoder built from scratch (no pretrained weights), then split back into premise/hypothesis, masked-mean-pooled, concatenated, and classified by an MLP.
+
+<img src="screenshots/model3-transformer-architecture.png" alt="Model 3 architecture: Transformer cross-encoder" width="480">
 
 All three share the same training loop, optimizer (AdamW), loss, and evaluation harness for a fair comparison — see section 3 of the notebook.
 
